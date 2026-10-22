@@ -710,6 +710,12 @@ fetch('logo.jpg')
   .then(u => { LOGO_DATA_URL = u; })
   .catch(() => {});
 
+// When the page runs as a claude.ai artifact, files are saved through the viewer (plain downloads are blocked there)
+let DOWNLOADS = null;
+if (window.claude && typeof window.claude.use === 'function') {
+  window.claude.use('downloads').then(ns => { DOWNLOADS = ns; }).catch(() => {});
+}
+
 function downloadSim() {
   const d = window._simData || {};
   const logoSrc = LOGO_DATA_URL || new URL('logo.jpg', location.href).href;
@@ -805,6 +811,10 @@ ${d.planAnnual > 0 ? `<p style="font-size:12px;color:#888;margin-bottom:20px"><s
 </div>
 <footer>Indicative simulation only — consult a qualified tax advisor before any investment · Uluwatu Property</footer>
 </body></html>`;
+  if (DOWNLOADS) {
+    DOWNLOADS.save({ filename: 'uluwatu-roi-simulation.html', data: html }).catch(() => {});
+    return;
+  }
   const blob = new Blob([html], { type: 'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
