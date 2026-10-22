@@ -178,6 +178,9 @@
   .irow input.money { width: 100px; flex-shrink: 0; }
   .managed-fields .irow label { flex: 1; min-width: 0; }
   .managed-fields .irow .unit { width: 72px; flex-shrink: 0; white-space: nowrap; }
+  .managed-fields .irow.range-row label { flex: 0 1 160px; }
+  .irow select { flex: 1; min-width: 0; font-size: 13px; padding: 5px 8px; border-radius: var(--r); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); }
+  .card > .hint { margin-top: 8px; }
   .hint { font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
 
   /* Footer */
@@ -260,10 +263,23 @@
           </div>
         </div>
         <div class="irow">
-          <label>Management fee</label>
+          <label for="ota">OTA commission</label>
+          <input type="range" id="ota" min="0" max="25" step="0.5" value="15" oninput="recalc()">
+          <span class="ov" id="ota-out"></span>
+        </div>
+        <div class="irow">
+          <label for="mgmt">Management fee</label>
           <input type="range" id="mgmt" min="10" max="25" step="1" value="15" oninput="recalc()">
           <span class="ov" id="mgmt-out"></span>
         </div>
+        <div class="irow">
+          <label for="mgmt_base">Management fee on</label>
+          <select id="mgmt_base" onchange="recalc()">
+            <option value="net" selected>Revenue after OTA</option>
+            <option value="gross">Gross revenue</option>
+          </select>
+        </div>
+        <p class="hint">Nightly rates are the prices guests see on Airbnb and Booking.com. Airbnb takes about 15.5% from the host, Booking.com about 15%.</p>
       </div>
 
       <div class="card">
@@ -339,7 +355,12 @@
             <input type="number" id="ig_monthly" placeholder="0" min="0" step="10" oninput="recalc()" class="money">
             <span class="unit">USD / month</span>
           </div>
-          <p class="hint">Production is added to the total investment. Instagram management is added to the yearly costs.</p>
+          <div class="irow range-row">
+            <label for="direct">Direct bookings</label>
+            <input type="range" id="direct" min="0" max="100" step="5" value="0" oninput="recalc()">
+            <span class="ov" id="direct-out"></span>
+          </div>
+          <p class="hint">Production is added to the total investment. Instagram management is added to the yearly costs. Direct bookings through the website and Instagram pay no OTA commission.</p>
         </div>
       </div>
 
@@ -473,6 +494,13 @@ function recalc() {
   const igMonthly = managed ? g('ig_monthly') : 0;
   const igAnnual = igMonthly * 12;
 
+  // Booking channels: OTA commission on platform bookings; direct bookings (website + Instagram) pay none
+  const ota = g('ota') / 100;
+  const direct = managed ? g('direct') / 100 : 0;
+  const mgmtOnNet = document.getElementById('mgmt_base').value === 'net';
+  set('ota-out', g('ota').toFixed(1) + '%');
+  set('direct-out', Math.round(g('direct')) + '%');
+
   set('lease-out', lease + ' yrs');
   set('taxrate-out', g('taxrate').toFixed(1) + '%');
   set('mgmt-out', Math.round(g('mgmt')) + '%');
@@ -547,8 +575,9 @@ function recalc() {
   const totalOp = Object.values(ai).reduce((a, b) => a + b, 0);
   set('total-op', fmt(totalOp));
 
-  const mgmtCost = grossRevenue * mgmt;
-  const netBeforeTax = grossRevenue - mgmtCost - totalOp - planAnnual - igAnnual;
+  const otaCost = grossRevenue * ota * (1 - direct);
+  const mgmtCost = (mgmtOnNet ? grossRevenue - otaCost : grossRevenue) * mgmt;
+  const netBeforeTax = grossRevenue - otaCost - mgmtCost - totalOp - planAnnual - igAnnual;
   const taxCost = Math.max(0, netBeforeTax) * taxrate;
   const netRevenue = netBeforeTax - taxCost;
   const roiGross = totalInvest > 0 ? grossRevenue / totalInvest * 100 : 0;
@@ -591,7 +620,8 @@ function recalc() {
     <div class="prow"><span class="rl">High season</span><span class="rv p">${fmt(rev.high)}</span></div>
     <div class="prow"><span class="rl">Low season</span><span class="rv p">${fmt(rev.low)}</span></div>
     <div class="prow" style="border-top:.5px solid var(--border2);padding-top:7px;margin-top:3px"><span class="rl" style="font-weight:500;color:var(--text)">Gross revenue</span><span class="rv p">${fmt(grossRevenue)}</span></div>
-    <div class="prow" style="margin-top:6px"><span class="rl">— Management (${Math.round(g('mgmt'))}%)</span><span class="rv n">−${fmt(mgmtCost)}</span></div>
+    ${otaCost > 0 ? `<div class="prow" style="margin-top:6px"><span class="rl">— OTA commission (${g('ota').toFixed(1)}%${direct > 0 ? ' on ' + Math.round((1 - direct) * 100) + '% of bookings' : ''})</span><span class="rv n">−${fmt(otaCost)}</span></div>` : ''}
+    <div class="prow"${otaCost > 0 ? '' : ' style="margin-top:6px"'}><span class="rl">— Management (${Math.round(g('mgmt'))}%${otaCost > 0 ? (mgmtOnNet ? ' of revenue after OTA' : ' of gross revenue') : ''})</span><span class="rv n">−${fmt(mgmtCost)}</span></div>
     <div class="prow"><span class="rl">— Operating costs</span><span class="rv n">−${fmt(totalOp)}</span></div>
     ${planAnnual > 0 ? `<div class="prow"><span class="rl">— Maintenance plan (${plan.label})</span><span class="rv n">−${fmt(planAnnual)}</span></div>` : ''}
     ${igAnnual > 0 ? `<div class="prow"><span class="rl">— Instagram page management</span><span class="rv n">−${fmt(igAnnual)}</span></div>` : ''}
@@ -599,7 +629,7 @@ function recalc() {
     <div class="prow prow-total"><span class="rl">Net income / year</span><span class="rv ${netRevenue >= 0 ? 'p' : 'n'}">${fmt(netRevenue)}</span></div>
   `);
 
-  const bi = [['Management', mgmtCost, '#5a5a45'], ['Housekeeper', ai.housekeeper, '#1D9E75'], ['Garden/Pool', ai.garden, '#378ADD'], ['Laundry', ai.laundry, '#BA7517'], ['Electricity', ai.electricity, '#D85A30'], ['Maintenance', ai.maintenance, '#7F77DD'], ['Maintenance plan', planAnnual, '#2E8C8C', true], ['Instagram mgmt', igAnnual, '#B0A060', true], ['Tax on net income', taxCost, '#D4537E']]
+  const bi = [['OTA commission', otaCost, '#4F6D8A', true], ['Management', mgmtCost, '#5a5a45'],['Housekeeper', ai.housekeeper, '#1D9E75'], ['Garden/Pool', ai.garden, '#378ADD'], ['Laundry', ai.laundry, '#BA7517'], ['Electricity', ai.electricity, '#D85A30'], ['Maintenance', ai.maintenance, '#7F77DD'], ['Maintenance plan', planAnnual, '#2E8C8C', true], ['Instagram mgmt', igAnnual, '#B0A060', true], ['Tax on net income', taxCost, '#D4537E']]
     .filter(c => !c[3] || c[1] > 0);
   const maxC = Math.max(...bi.map(c => c[1]), 1);
   setH('bars', bi.map(([l, v, color]) => `
@@ -617,11 +647,12 @@ function recalc() {
       const rd = Math.round(DAYS[s] * occs[s]);
       yr += rd * (s === 'peak' ? rP2 : s === 'high' ? rH2 : rLowY);
     }
-    const yMgmt = yr * mgmt;
+    const yOta = yr * ota * (1 - direct);
+    const yMgmt = (mgmtOnNet ? yr - yOta : yr) * mgmt;
     const yOp = yr * 0.02 + (cH + cGarden + cL + cE) * ((DAYS.low / 30.44) + (DAYS.high / 30.44) * 1.2 + (DAYS.peak / 30.44) * 1.4) + planAnnual + igAnnual;
-    const yNetBeforeTax = yr - yMgmt - yOp;
+    const yNetBeforeTax = yr - yOta - yMgmt - yOp;
     const yTax = Math.max(0, yNetBeforeTax) * taxrate;
-    const ch = yMgmt + yOp + yTax;
+    const ch = yOta + yMgmt + yOp + yTax;
     cumNet += yr - ch;
     rLowY *= (1 + growth);
   }
@@ -699,7 +730,7 @@ function recalc() {
     </div>
   `);
 
-  window._simData = { planKey, planLabel: plan.label, planPerks: plan.perks, planIdrMo, planAnnual, fx, managed, setupCost, igMonthly, igAnnual, price, lease, bedrooms,mgmt: g('mgmt'), taxrate: g('taxrate'), horizon, growth: g('growth'), appre: g('appre'), rLow, rHigh, rPeak, avgRate, avgOcc, o_peak: g('o_peak'), o_high: g('o_high'), o_low: g('o_low'), cH, cGarden, cL, cE, grossRevenue, netRevenue, roiNet, roiGross, payback, totalOp, mgmtCost, taxCost, totalInvest, rev, rdays, cumNet, totalNights, ai, leaseRemaining, marketValue, residualPess, residualBase, residualOpt, roiOnRentals, totalRetPess, totalRetBase, totalRetOpt, roiTotalPess, roiTotalBase, roiTotalOpt };
+  window._simData = { ota: g('ota'), direct: direct * 100, otaCost, mgmtOnNet, planKey,planLabel: plan.label, planPerks: plan.perks, planIdrMo, planAnnual, fx, managed, setupCost, igMonthly, igAnnual, price, lease, bedrooms,mgmt: g('mgmt'), taxrate: g('taxrate'), horizon, growth: g('growth'), appre: g('appre'), rLow, rHigh, rPeak, avgRate, avgOcc, o_peak: g('o_peak'), o_high: g('o_high'), o_low: g('o_low'), cH, cGarden, cL, cE, grossRevenue, netRevenue, roiNet, roiGross, payback, totalOp, mgmtCost, taxCost, totalInvest, rev, rdays, cumNet, totalNights, ai, leaseRemaining, marketValue, residualPess, residualBase, residualOpt, roiOnRentals, totalRetPess, totalRetBase, totalRetOpt, roiTotalPess, roiTotalBase, roiTotalOpt };
 }
 
 // Logo embedded in downloaded simulations: loaded once as a data URL so the exported file works offline
@@ -772,7 +803,8 @@ footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center;padding-botto
 <h2>Annual P&L</h2>
 <table>
 <tr><td>Gross rental revenue</td><td class="p">${f(d.grossRevenue)}</td></tr>
-<tr><td>— Management (${d.mgmt}%)</td><td class="n">−${f(d.mgmtCost)}</td></tr>
+${d.otaCost > 0 ? `<tr><td>— OTA commission (${(+d.ota).toFixed(1)}%${d.direct > 0 ? ' on ' + Math.round(100 - d.direct) + '% of bookings, ' + Math.round(d.direct) + '% booked direct' : ''})</td><td class="n">−${f(d.otaCost)}</td></tr>` : ''}
+<tr><td>— Management (${d.mgmt}%${d.otaCost > 0 ? (d.mgmtOnNet ? ' of revenue after OTA' : ' of gross revenue') : ''})</td><td class="n">−${f(d.mgmtCost)}</td></tr>
 <tr><td>— Housekeeper ($120 × ${d.bedrooms} BR)</td><td class="n">−${f(ai.housekeeper)}</td></tr>
 <tr><td>— Garden &amp; pool</td><td class="n">−${f(ai.garden)}</td></tr>
 <tr><td>— Laundry ($50 × ${d.bedrooms} BR)</td><td class="n">−${f(ai.laundry)}</td></tr>
