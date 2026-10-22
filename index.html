@@ -14,10 +14,11 @@
     --red-bg: #fcebeb; --red: #a32d2d;
     --blue-bg: #e6f1fb; --blue: #185fa5;
     --orange-bg: #fef3e2; --orange: #854f0b;
+    --accent: #5a5a45; --accent-bg: #f1f1e8; --chip: #ececea;
     --r: 8px; --rl: 12px;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #333330;
       --text: #f0efea; --text2: #a0a09a; --text3: #6b6b65;
       --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.18);
@@ -25,8 +26,22 @@
       --red-bg: #1f0a0a; --red: #f09595;
       --blue-bg: #042c53; --blue: #85b7eb;
       --orange-bg: #2a1a04; --orange: #fac775;
+      --accent: #c8c8b4; --accent-bg: #2f2f28; --chip: #333330;
+      color-scheme: dark;
     }
   }
+  :root[data-theme="dark"] {
+    --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #333330;
+    --text: #f0efea; --text2: #a0a09a; --text3: #6b6b65;
+    --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.18);
+    --green-bg: #17340a; --green: #97c459;
+    --red-bg: #1f0a0a; --red: #f09595;
+    --blue-bg: #042c53; --blue: #85b7eb;
+    --orange-bg: #2a1a04; --orange: #fac775;
+    --accent: #c8c8b4; --accent-bg: #2f2f28; --chip: #333330;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg2);
@@ -51,6 +66,16 @@
   /* Main 2-col layout */
   .main-layout { display: grid; grid-template-columns: 420px 1fr; gap: 20px; align-items: start; }
   @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+  .main-layout > * { min-width: 0; }
+  @media (max-width: 520px) {
+    body { padding: 20px 16px; }
+    .irow label { min-width: 0; flex: 0 1 120px; }
+    .irow .ov { min-width: 52px; }
+    .sgrid, .avg-row { grid-template-columns: 84px 44px 1fr 1fr; }
+    .roi-hero .roi-val { font-size: 52px; }
+    .bl { min-width: 96px; }
+    #price { width: 110px !important; }
+  }
 
   /* Cards */
   .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--rl); padding: 18px 20px; margin-bottom: 14px; }
@@ -63,7 +88,7 @@
   .irow { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .irow:last-child { margin-bottom: 0; }
   .irow label { font-size: 13px; color: var(--text2); min-width: 160px; flex-shrink: 0; }
-  .irow input[type=range] { flex: 1; accent-color: #5a5a45; }
+  .irow input[type=range] { flex: 1; min-width: 0; width: 0; accent-color: #5a5a45; }
   .irow .ov { font-size: 13px; font-weight: 500; min-width: 80px; text-align: right; color: var(--text); }
   .irow input[type=number] { width: 80px; font-size: 13px; padding: 5px 8px; border-radius: var(--r); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); text-align: right; }
   .irow .unit { font-size: 12px; color: var(--text3); }
@@ -124,6 +149,36 @@
   .bb { flex: 1; height: 14px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
   .bf { height: 100%; border-radius: 3px; transition: width .3s; }
   .bv { min-width: 70px; text-align: right; font-weight: 500; font-size: 12px; color: var(--text); }
+
+  /* Maintenance plans */
+  .card-note { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
+  .plans { border: 0.5px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 10px; }
+  .plan-head, .plan { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto 64px; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 0.5px solid var(--border); }
+  .plan-head { background: var(--bg2); font-size: 10px; font-weight: 600; color: var(--text2); letter-spacing: .04em; padding-block: 7px; }
+  .plan-head span:nth-child(n+3) { text-align: right; }
+  .plan { font-size: 12px; cursor: pointer; transition: background .15s; }
+  .plan:last-child { border-bottom: none; }
+  .plan:hover { background: var(--bg2); }
+  .plan:has(input:checked) { background: var(--accent-bg); }
+  .plan input { margin: 0; accent-color: var(--accent); }
+  .plan input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan .pn { font-weight: 500; color: var(--text); }
+  .plan .pi, .plan .pu { text-align: right; font-variant-numeric: tabular-nums; }
+  .plan .pi { color: var(--text); }
+  .plan .pu { color: var(--text3); }
+  .plan-detail { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 22px; }
+  .chip { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--chip); color: var(--text2); }
+  .card-total { display: flex; justify-content: flex-end; gap: 5px; font-size: 12px; color: var(--text2); margin-top: 10px; }
+  .card-total strong { font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  /* Management with us */
+  .switch-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
+  .switch-row input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+  .managed-fields { margin-top: 14px; padding-top: 14px; border-top: 0.5px solid var(--border); }
+  .irow input.money { width: 100px; flex-shrink: 0; }
+  .managed-fields .irow label { flex: 1; min-width: 0; }
+  .managed-fields .irow .unit { width: 72px; flex-shrink: 0; white-space: nowrap; }
+  .hint { font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
 
   /* Footer */
   .footer { text-align: center; font-size: 11px; color: var(--text3); margin-top: 32px; padding-bottom: 24px; }
@@ -251,6 +306,44 @@
       </div>
 
       <div class="card">
+        <div class="sec">Maintenance plan</div>
+        <p class="card-note">Monthly subscription for a villa up to 3 bedrooms. Each extra bedroom is billed on top.</p>
+        <div class="plans" role="radiogroup" aria-label="Maintenance plan">
+          <div class="plan-head"><span></span><span>Plan</span><span>IDR / month</span><span>USD / mo</span></div>
+          <label class="plan"><input type="radio" name="plan" id="plan_none" value="none" onchange="recalc()"><span class="pn">No plan</span><span class="pi" id="pi_none"></span><span class="pu" id="pu_none"></span></label>
+          <label class="plan"><input type="radio" name="plan" id="plan_essential" value="essential" onchange="recalc()"><span class="pn">Essential</span><span class="pi" id="pi_essential"></span><span class="pu" id="pu_essential"></span></label>
+          <label class="plan"><input type="radio" name="plan" id="plan_standard" value="standard" checked onchange="recalc()"><span class="pn">Standard</span><span class="pi" id="pi_standard"></span><span class="pu" id="pu_standard"></span></label>
+          <label class="plan"><input type="radio" name="plan" id="plan_premium" value="premium" onchange="recalc()"><span class="pn">Premium</span><span class="pi" id="pi_premium"></span><span class="pu" id="pu_premium"></span></label>
+          <label class="plan"><input type="radio" name="plan" id="plan_tailor" value="tailor" onchange="recalc()"><span class="pn">Tailor-made</span><span class="pi" id="pi_tailor"></span><span class="pu" id="pu_tailor"></span></label>
+        </div>
+        <div class="plan-detail" id="plan-detail"></div>
+        <div class="irow">
+          <label for="fx">Exchange rate</label>
+          <input type="number" id="fx" value="17900" min="1" step="100" oninput="recalc()" class="money">
+          <span class="unit">IDR per USD</span>
+        </div>
+        <div class="card-total">Plan cost per year: <strong id="plan-annual-out"></strong></div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Management by Uluwatu Property</div>
+        <label class="switch-row"><input type="checkbox" id="managed" checked onchange="recalc()">Rental managed by Uluwatu Property</label>
+        <div class="managed-fields" id="managed-fields">
+          <div class="irow">
+            <label for="setup_cost">Website + Instagram production</label>
+            <input type="number" id="setup_cost" placeholder="0" min="0" step="50" oninput="recalc()" class="money">
+            <span class="unit">USD one-off</span>
+          </div>
+          <div class="irow">
+            <label for="ig_monthly">Instagram page management</label>
+            <input type="number" id="ig_monthly" placeholder="0" min="0" step="10" oninput="recalc()" class="money">
+            <span class="unit">USD / month</span>
+          </div>
+          <p class="hint">Production is added to the total investment. Instagram management is added to the yearly costs.</p>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="sec">Taxes &amp; legal</div>
         <div class="irow">
           <label>Tax on net income</label>
@@ -337,6 +430,18 @@ const setH = (id, h) => { const el = document.getElementById(id); if (el) el.inn
 const DAYS = { peak: 14, high: 93, low: 258 };
 const FEES = 0.01;
 
+// Maintenance plans: monthly price in IDR for a villa up to 3 bedrooms, plus each extra bedroom
+const PLAN_BASE_BR = 3;
+const PLANS = {
+  none:      { label: 'No plan',     base: 0,       extra: 0,      perks: [] },
+  essential: { label: 'Essential',   base: 650000,  extra: 100000, perks: ['4 inspection visits / yr', '17-point checklist', 'Photo report'] },
+  standard:  { label: 'Standard',    base: 1250000, extra: 200000, perks: ['12 inspection visits / yr', '33-point checklist', 'Photo report', '5% off parts markup'] },
+  premium:   { label: 'Premium',     base: 2750000, extra: 400000, perks: ['26 inspection visits / yr', '2 deep inspections / yr', '52-point checklist', 'Photo + video report', '10% off parts markup'] },
+  tailor:    { label: 'Tailor-made', base: 4500000, extra: 600000, perks: ['12 inspection visits / yr', '2 deep inspections / yr', '52-point checklist', 'Photo + video report', '15% off parts markup'] },
+};
+const planMonthlyIDR = (key, br) => PLANS[key].base + PLANS[key].extra * Math.max(0, br - PLAN_BASE_BR);
+const fmtIDR = n => 'IDR ' + Math.round(n).toLocaleString('en-US');
+
 function recalc() {
   const price = g('price'), lease = g('lease');
   const bedrooms = Math.max(1, g('bedrooms'));
@@ -344,6 +449,29 @@ function recalc() {
   const mgmt = g('mgmt') / 100;
   const horizon = g('horizon'), growth = g('growth') / 100, appre = g('appre') / 100;
   const cGarden = g('c_garden');
+
+  // Maintenance plan
+  const fx = Math.max(1, g('fx'));
+  const planKey = (document.querySelector('input[name="plan"]:checked') || {}).value || 'none';
+  const plan = PLANS[planKey];
+  const planIdrMo = planMonthlyIDR(planKey, bedrooms);
+  const planAnnual = planIdrMo * 12 / fx;
+  for (const k of Object.keys(PLANS)) {
+    const m = planMonthlyIDR(k, bedrooms);
+    set('pi_' + k, k === 'none' ? '—' : Math.round(m).toLocaleString('en-US'));
+    set('pu_' + k, k === 'none' ? '—' : fmt(m / fx));
+  }
+  setH('plan-detail', plan.perks.length
+    ? plan.perks.map(p => `<span class="chip">${p}</span>`).join('')
+    : '<span class="chip">No maintenance subscription</span>');
+  set('plan-annual-out', planAnnual > 0 ? fmt(planAnnual) + ' (' + fmtIDR(planIdrMo) + ' / month)' : '$0');
+
+  // Management by Uluwatu Property: costs entered manually
+  const managed = document.getElementById('managed').checked;
+  document.getElementById('managed-fields').hidden = !managed;
+  const setupCost = managed ? g('setup_cost') : 0;
+  const igMonthly = managed ? g('ig_monthly') : 0;
+  const igAnnual = igMonthly * 12;
 
   set('lease-out', lease + ' yrs');
   set('taxrate-out', g('taxrate').toFixed(1) + '%');
@@ -353,7 +481,7 @@ function recalc() {
   set('growth-out', g('growth').toFixed(1) + '%');
   set('appre-out', g('appre').toFixed(1) + '%');
 
-  const totalInvest = price * (1 + FEES);
+  const totalInvest = price * (1 + FEES) + setupCost;
   const rLow = g('r_low'), rHigh = Math.round(rLow * 1.2), rPeak = Math.round(rLow * 1.4);
 
   set('r_peak_disp', '$' + rPeak + '/nt');
@@ -420,7 +548,7 @@ function recalc() {
   set('total-op', fmt(totalOp));
 
   const mgmtCost = grossRevenue * mgmt;
-  const netBeforeTax = grossRevenue - mgmtCost - totalOp;
+  const netBeforeTax = grossRevenue - mgmtCost - totalOp - planAnnual - igAnnual;
   const taxCost = Math.max(0, netBeforeTax) * taxrate;
   const netRevenue = netBeforeTax - taxCost;
   const roiGross = totalInvest > 0 ? grossRevenue / totalInvest * 100 : 0;
@@ -465,17 +593,19 @@ function recalc() {
     <div class="prow" style="border-top:.5px solid var(--border2);padding-top:7px;margin-top:3px"><span class="rl" style="font-weight:500;color:var(--text)">Gross revenue</span><span class="rv p">${fmt(grossRevenue)}</span></div>
     <div class="prow" style="margin-top:6px"><span class="rl">— Management (${Math.round(g('mgmt'))}%)</span><span class="rv n">−${fmt(mgmtCost)}</span></div>
     <div class="prow"><span class="rl">— Operating costs</span><span class="rv n">−${fmt(totalOp)}</span></div>
+    ${planAnnual > 0 ? `<div class="prow"><span class="rl">— Maintenance plan (${plan.label})</span><span class="rv n">−${fmt(planAnnual)}</span></div>` : ''}
+    ${igAnnual > 0 ? `<div class="prow"><span class="rl">— Instagram page management</span><span class="rv n">−${fmt(igAnnual)}</span></div>` : ''}
     <div class="prow"><span class="rl">— Tax on net income (${g('taxrate').toFixed(1)}%)</span><span class="rv n">−${fmt(taxCost)}</span></div>
     <div class="prow prow-total"><span class="rl">Net income / year</span><span class="rv ${netRevenue >= 0 ? 'p' : 'n'}">${fmt(netRevenue)}</span></div>
   `);
 
-  const bi = [['Management', mgmtCost], ['Housekeeper', ai.housekeeper], ['Garden/Pool', ai.garden], ['Laundry', ai.laundry], ['Electricity', ai.electricity], ['Maintenance', ai.maintenance], ['Tax on net income', taxCost]];
+  const bi = [['Management', mgmtCost, '#5a5a45'], ['Housekeeper', ai.housekeeper, '#1D9E75'], ['Garden/Pool', ai.garden, '#378ADD'], ['Laundry', ai.laundry, '#BA7517'], ['Electricity', ai.electricity, '#D85A30'], ['Maintenance', ai.maintenance, '#7F77DD'], ['Maintenance plan', planAnnual, '#2E8C8C', true], ['Instagram mgmt', igAnnual, '#B0A060', true], ['Tax on net income', taxCost, '#D4537E']]
+    .filter(c => !c[3] || c[1] > 0);
   const maxC = Math.max(...bi.map(c => c[1]), 1);
-  const colors = ['#5a5a45', '#1D9E75', '#378ADD', '#BA7517', '#D85A30', '#7F77DD', '#D4537E', '#888780'];
-  setH('bars', bi.map(([l, v], i) => `
+  setH('bars', bi.map(([l, v, color]) => `
     <div class="br">
       <div class="bl">${l}</div>
-      <div class="bb"><div class="bf" style="width:${Math.round(v / maxC * 100)}%;background:${colors[i]}"></div></div>
+      <div class="bb"><div class="bf" style="width:${Math.round(v / maxC * 100)}%;background:${color}"></div></div>
       <div class="bv">${fmt(v)}</div>
     </div>`).join(''));
 
@@ -488,7 +618,7 @@ function recalc() {
       yr += rd * (s === 'peak' ? rP2 : s === 'high' ? rH2 : rLowY);
     }
     const yMgmt = yr * mgmt;
-    const yOp = yr * 0.02 + (cH + cGarden + cL + cE) * ((DAYS.low / 30.44) + (DAYS.high / 30.44) * 1.2 + (DAYS.peak / 30.44) * 1.4);
+    const yOp = yr * 0.02 + (cH + cGarden + cL + cE) * ((DAYS.low / 30.44) + (DAYS.high / 30.44) * 1.2 + (DAYS.peak / 30.44) * 1.4) + planAnnual + igAnnual;
     const yNetBeforeTax = yr - yMgmt - yOp;
     const yTax = Math.max(0, yNetBeforeTax) * taxrate;
     const ch = yMgmt + yOp + yTax;
@@ -569,7 +699,7 @@ function recalc() {
     </div>
   `);
 
-  window._simData = { price, lease, bedrooms, mgmt: g('mgmt'), taxrate: g('taxrate'), horizon, growth: g('growth'), appre: g('appre'), rLow, rHigh, rPeak, avgRate, avgOcc, o_peak: g('o_peak'), o_high: g('o_high'), o_low: g('o_low'), cH, cGarden, cL, cE, grossRevenue, netRevenue, roiNet, roiGross, payback, totalOp, mgmtCost, taxCost, totalInvest, rev, rdays, cumNet, totalNights, ai, leaseRemaining, marketValue, residualPess, residualBase, residualOpt, roiOnRentals, totalRetPess, totalRetBase, totalRetOpt, roiTotalPess, roiTotalBase, roiTotalOpt };
+  window._simData = { planKey, planLabel: plan.label, planPerks: plan.perks, planIdrMo, planAnnual, fx, managed, setupCost, igMonthly, igAnnual, price, lease, bedrooms,mgmt: g('mgmt'), taxrate: g('taxrate'), horizon, growth: g('growth'), appre: g('appre'), rLow, rHigh, rPeak, avgRate, avgOcc, o_peak: g('o_peak'), o_high: g('o_high'), o_low: g('o_low'), cH, cGarden, cL, cE, grossRevenue, netRevenue, roiNet, roiGross, payback, totalOp, mgmtCost, taxCost, totalInvest, rev, rdays, cumNet, totalNights, ai, leaseRemaining, marketValue, residualPess, residualBase, residualOpt, roiOnRentals, totalRetPess, totalRetBase, totalRetOpt, roiTotalPess, roiTotalBase, roiTotalOpt };
 }
 
 // Logo embedded in downloaded simulations: loaded once as a data URL so the exported file works offline
@@ -620,7 +750,7 @@ footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center;padding-botto
 </style></head><body>
 <img src="${logoSrc}" alt="Uluwatu Property" style="height:72px;width:72px;border-radius:6px;display:block;margin-bottom:20px;">
 <p style="font-size:12px;color:#888;margin-bottom:4px">Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-<p style="font-size:11px;color:#aaa;margin-bottom:20px">${d.bedrooms} bedroom(s) · Purchase ${f(d.price)} · Lease ${d.lease} yrs · Notary 1% · Total investment ${f(d.totalInvest)}</p>
+<p style="font-size:11px;color:#aaa;margin-bottom:20px">${d.bedrooms} bedroom(s) · Purchase ${f(d.price)} · Lease ${d.lease} yrs · Notary 1%${d.setupCost > 0 ? ' · Website + Instagram production ' + f(d.setupCost) : ''} · Total investment ${f(d.totalInvest)}</p>
 <div class="hero ${tier}">
   <div class="lb">Net ROI (annual)</div>
   <div class="val">${p(d.roiNet)}</div>
@@ -642,9 +772,12 @@ footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center;padding-botto
 <tr><td>— Laundry ($50 × ${d.bedrooms} BR)</td><td class="n">−${f(ai.laundry)}</td></tr>
 <tr><td>— Electricity ($60 × ${d.bedrooms} BR)</td><td class="n">−${f(ai.electricity)}</td></tr>
 <tr><td>— Maintenance (2% gross rent)</td><td class="n">−${f(ai.maintenance)}</td></tr>
+${d.planAnnual > 0 ? `<tr><td>— Maintenance plan: ${d.planLabel} (IDR ${Math.round(d.planIdrMo).toLocaleString('en-US')} / month)</td><td class="n">−${f(d.planAnnual)}</td></tr>` : ''}
+${d.igAnnual > 0 ? `<tr><td>— Instagram page management (${f(d.igMonthly)} / month)</td><td class="n">−${f(d.igAnnual)}</td></tr>` : ''}
 <tr><td>— Tax on net income (${d.taxrate}%)</td><td class="n">−${f(d.taxCost)}</td></tr>
 <tr style="font-size:15px"><td><strong>Net income / year</strong></td><td class="${(d.netRevenue || 0) >= 0 ? 'p' : 'n'}"><strong>${f(d.netRevenue)}</strong></td></tr>
 </table>
+${d.planAnnual > 0 ? `<p style="font-size:12px;color:#888;margin-bottom:20px"><strong style="color:#2c2c2a">${d.planLabel} maintenance plan:</strong> ${(d.planPerks || []).join(' · ')}. Converted at ${Math.round(d.fx).toLocaleString('en-US')} IDR per USD.</p>` : ''}
 <h2>${d.horizon}-year projection</h2>
 <div class="g2" style="margin-bottom:14px">
 <div class="met mpos"><div class="mlb">Cumulative net income</div><div class="mvl">${f(d.cumNet)}</div><div class="msb">rental income over ${d.horizon} yrs</div></div>
