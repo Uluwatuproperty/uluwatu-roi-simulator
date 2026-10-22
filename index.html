@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uluwatu Property — Bali ROI Simulator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f2; --bg3: #ececea;
+    --text: #1a1a18; --text2: #6b6b67; --text3: #a0a09c;
+    --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+    --green-bg: #eaf3de; --green: #3b6d11;
+    --red-bg: #fcebeb; --red: #a32d2d;
+    --blue-bg: #e6f1fb; --blue: #185fa5;
+    --orange-bg: #fef3e2; --orange: #854f0b;
+    --r: 8px; --rl: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #333330;
+      --text: #f0efea; --text2: #a0a09a; --text3: #6b6b65;
+      --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.18);
+      --green-bg: #17340a; --green: #97c459;
+      --red-bg: #1f0a0a; --red: #f09595;
+      --blue-bg: #042c53; --blue: #85b7eb;
+      --orange-bg: #2a1a04; --orange: #fac775;
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg2);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  .wrapper { max-width: 1200px; margin: 0 auto; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .header-left { display: flex; align-items: center; gap: 18px; }
+  .logo-box { background: #c8c8b4; padding: 12px 20px; border-radius: 8px; }
+  .logo-main { font-family: Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; color: #2c2c2a; display: block; }
+  .logo-sub { font-family: Georgia, serif; font-size: 11px; letter-spacing: 5px; color: #2c2c2a; display: block; margin-top: 1px; }
+  .header-title { font-size: 20px; font-weight: 500; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .dl-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 8px 18px; border-radius: var(--r); border: 0.5px solid var(--border2); background: var(--bg); cursor: pointer; color: var(--text); transition: background .15s; }
+  .dl-btn:hover { background: var(--bg3); }
+  .dl-btn svg { flex-shrink: 0; }
+
+  /* Main 2-col layout */
+  .main-layout { display: grid; grid-template-columns: 420px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--rl); padding: 18px 20px; margin-bottom: 14px; }
+  .card:last-child { margin-bottom: 0; }
+
+  /* Section labels */
+  .sec { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 10px; }
+
+  /* Input rows */
+  .irow { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .irow:last-child { margin-bottom: 0; }
+  .irow label { font-size: 13px; color: var(--text2); min-width: 160px; flex-shrink: 0; }
+  .irow input[type=range] { flex: 1; accent-color: #5a5a45; }
+  .irow .ov { font-size: 13px; font-weight: 500; min-width: 80px; text-align: right; color: var(--text); }
+  .irow input[type=number] { width: 80px; font-size: 13px; padding: 5px 8px; border-radius: var(--r); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); text-align: right; }
+  .irow .unit { font-size: 12px; color: var(--text3); }
+  .fixed-val { font-size: 13px; font-weight: 500; color: var(--text); }
+  .fixed-note { font-size: 11px; color: var(--text3); margin-left: 4px; }
+
+  hr { border: none; border-top: 0.5px solid var(--border); margin: 14px 0; }
+
+  /* Season grid */
+  .sgrid { display: grid; grid-template-columns: 120px 60px 1fr 1fr; gap: 0; border: 0.5px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 12px; }
+  .sh { font-size: 10px; font-weight: 600; color: var(--text2); padding: 7px 8px; background: var(--bg2); text-align: center; border-bottom: 0.5px solid var(--border); letter-spacing: .04em; }
+  .sh:first-child { text-align: left; }
+  .sl { font-size: 12px; color: var(--text2); padding: 8px 8px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 6px; }
+  .sl .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .sc { padding: 5px 7px; border-bottom: 0.5px solid var(--border); border-left: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; }
+  .sc input[type=number] { width: 100%; font-size: 12px; padding: 4px 6px; border-radius: 5px; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); text-align: right; }
+  .sc .av { font-size: 12px; font-weight: 500; color: var(--text); }
+  .sc .days { font-size: 12px; font-weight: 500; color: var(--text); }
+  .last-row .sl, .last-row .sc { border-bottom: none; }
+  .avg-row { display: grid; grid-template-columns: 120px 60px 1fr 1fr; background: var(--bg2); border-top: 0.5px solid var(--border2); }
+  .ac { font-size: 11px; padding: 6px 8px; color: var(--text2); border-left: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 500; }
+  .ac:first-child { border-left: none; font-style: italic; font-weight: 400; color: var(--text3); }
+  .pill { display: inline-flex; font-size: 9px; padding: 1px 5px; border-radius: 20px; background: var(--blue-bg); color: var(--blue); margin-left: 4px; }
+
+  /* ROI hero */
+  .roi-hero { border-radius: var(--rl); padding: 22px 24px; margin-bottom: 14px; }
+  .roi-hero .roi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .roi-hero .roi-val { font-size: 64px; font-weight: 500; line-height: 1; }
+  .roi-hero .roi-sub { font-size: 13px; margin-top: 8px; }
+
+  /* Metric cards */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 600px) { .g4 { grid-template-columns: 1fr 1fr; } .g3 { grid-template-columns: 1fr 1fr; } }
+  .met { border-radius: var(--r); padding: 12px 14px; }
+  .met .lb { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+  .met .vl { font-size: 18px; font-weight: 500; color: var(--text); }
+  .met .sb { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .met-base { background: var(--bg2); }
+  .met-pos { background: var(--green-bg); } .met-pos .vl { color: var(--green); }
+  .met-neg { background: var(--red-bg); } .met-neg .vl { color: var(--red); }
+  .met-inf { background: var(--blue-bg); } .met-inf .vl { color: var(--blue); }
+
+  /* P&L rows */
+  .prow { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .prow:last-child { border: none; }
+  .rl { color: var(--text2); }
+  .rv { font-weight: 500; color: var(--text); }
+  .rv.p { color: var(--green); } .rv.n { color: var(--red); }
+  .prow-total { border-top: 0.5px solid var(--border2); margin-top: 4px; padding-top: 8px; }
+  .prow-total .rl { font-weight: 500; color: var(--text); font-size: 14px; }
+  .prow-total .rv { font-size: 16px; }
+
+  /* Bar chart */
+  .br { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; font-size: 12px; }
+  .bl { min-width: 120px; color: var(--text2); }
+  .bb { flex: 1; height: 14px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+  .bf { height: 100%; border-radius: 3px; transition: width .3s; }
+  .bv { min-width: 70px; text-align: right; font-weight: 500; font-size: 12px; color: var(--text); }
+
+  /* Footer */
+  .footer { text-align: center; font-size: 11px; color: var(--text3); margin-top: 32px; padding-bottom: 24px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="header-left">
+      <img src="logo.jpg" alt="Uluwatu Property" style="height:60px;width:60px;border-radius:6px;display:block;">
+      <div>
+        <div class="header-title">Bali ROI Simulator</div>
+        <div class="header-sub">Villa / House — adjust inputs, results update instantly</div>
+      </div>
+    </div>
+    <button class="dl-btn" onclick="downloadSim()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0L5 7m3 3l3-3M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Download simulation
+    </button>
+  </div>
+
+  <div class="main-layout">
+
+    <!-- LEFT COL: Inputs -->
+    <div>
+      <div class="card">
+        <div class="sec">Property</div>
+        <div class="irow">
+          <label>Purchase price</label>
+          <input type="number" id="price" value="150000" min="0" step="1000" oninput="recalc()" style="width:140px;font-size:13px;padding:5px 8px;border-radius:var(--r);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);text-align:right">
+          <span class="unit">USD</span>
+        </div>
+        <div class="irow">
+          <label>Lease duration</label>
+          <input type="range" id="lease" min="10" max="80" step="1" value="25" oninput="recalc()">
+          <span class="ov" id="lease-out"></span>
+        </div>
+        <div class="irow">
+          <label>Bedrooms</label>
+          <input type="number" id="bedrooms" value="1" min="1" max="10" step="1" oninput="recalc()">
+          <span class="unit">BR</span>
+        </div>
+        <div class="irow">
+          <label>Notary fees</label>
+          <span class="fixed-val">1%</span><span class="fixed-note">fixed</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Seasonal nightly rates</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Set low season rate — high (+20%) and peak (+40%) are auto-calculated.</p>
+        <div class="sgrid">
+          <div class="sh">Season</div>
+          <div class="sh">Days</div>
+          <div class="sh">Rate / night</div>
+          <div class="sh">Occupancy %</div>
+
+          <div class="sl"><span class="dot" style="background:#c0392b"></span>Peak</div>
+          <div class="sc"><span class="days">14</span></div>
+          <div class="sc"><span class="av" id="r_peak_disp"></span></div>
+          <div class="sc"><input type="number" id="o_peak" value="90" min="0" max="100" step="1" oninput="recalc()"></div>
+
+          <div class="sl"><span class="dot" style="background:#e67e22"></span>High</div>
+          <div class="sc"><span class="days">93</span></div>
+          <div class="sc"><span class="av" id="r_high_disp"></span></div>
+          <div class="sc"><input type="number" id="o_high" value="80" min="0" max="100" step="1" oninput="recalc()"></div>
+
+          <div class="sl last-row"><span class="dot" style="background:#2980b9"></span>Low <span class="pill">base</span></div>
+          <div class="sc last-row"><span class="days">258</span></div>
+          <div class="sc last-row"><input type="number" id="r_low" value="120" min="0" step="10" oninput="recalc()"></div>
+          <div class="sc last-row"><input type="number" id="o_low" value="70" min="0" max="100" step="1" oninput="recalc()"></div>
+
+          <div class="avg-row">
+            <div class="ac">Weighted avg.</div>
+            <div class="ac"><span id="avg-days-out"></span></div>
+            <div class="ac"><span id="avg-rate-out"></span></div>
+            <div class="ac"><span id="avg-occ-out"></span></div>
+          </div>
+        </div>
+        <div class="irow">
+          <label>Management fee</label>
+          <input type="range" id="mgmt" min="10" max="25" step="1" value="15" oninput="recalc()">
+          <span class="ov" id="mgmt-out"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Operating costs — base / month (low season)</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">High season ×1.2 · Peak season ×1.4 applied automatically.</p>
+        <div class="sgrid">
+          <div class="sh">Item</div>
+          <div class="sh" style="text-align:center">Low base</div>
+          <div class="sh">High ×1.2</div>
+          <div class="sh">Peak ×1.4</div>
+
+          <div class="sl">Housekeeper<br><span style="font-size:10px;color:var(--text3)">$120 × BR</span></div>
+          <div class="sc"><span class="av" id="c_house_low"></span></div>
+          <div class="sc"><span class="av" id="c_house_high"></span></div>
+          <div class="sc"><span class="av" id="c_house_peak"></span></div>
+
+          <div class="sl">Garden &amp; pool</div>
+          <div class="sc"><input type="number" id="c_garden" value="20" min="0" step="5" oninput="recalc()"></div>
+          <div class="sc"><span class="av" id="c_garden_high"></span></div>
+          <div class="sc"><span class="av" id="c_garden_peak"></span></div>
+
+          <div class="sl">Laundry<br><span style="font-size:10px;color:var(--text3)">$50 × BR</span></div>
+          <div class="sc"><span class="av" id="c_laundry_low"></span></div>
+          <div class="sc"><span class="av" id="c_laundry_high"></span></div>
+          <div class="sc"><span class="av" id="c_laundry_peak"></span></div>
+
+          <div class="sl">Electricity<br><span style="font-size:10px;color:var(--text3)">$60 × BR</span></div>
+          <div class="sc"><span class="av" id="c_elec_low"></span></div>
+          <div class="sc"><span class="av" id="c_elec_high"></span></div>
+          <div class="sc"><span class="av" id="c_elec_peak"></span></div>
+
+          <div class="sl last-row">Maintenance<br><span style="font-size:10px;color:var(--text3)">2% gross rent</span></div>
+          <div class="sc last-row"><span class="av" id="c_maint_low"></span></div>
+          <div class="sc last-row"><span class="av" id="c_maint_high"></span></div>
+          <div class="sc last-row"><span class="av" id="c_maint_peak"></span></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;font-size:12px;color:var(--text2)">
+          Total annual: <span id="total-op" style="font-weight:500;color:var(--text);margin-left:5px"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Taxes &amp; legal</div>
+        <div class="irow">
+          <label>Tax on net income</label>
+          <input type="range" id="taxrate" min="0.5" max="30" step="0.5" value="0.5" oninput="recalc()">
+          <span class="ov" id="taxrate-out"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT COL: Results -->
+    <div>
+      <div class="roi-hero" id="roi-hero-box">
+        <div class="roi-label" id="roi-label-txt"></div>
+        <div class="roi-val" id="roi-hero-val"></div>
+        <div class="roi-sub" id="roi-hero-sub"></div>
+      </div>
+
+      <div class="g2" style="margin-bottom:14px">
+        <div class="met met-base">
+          <div class="lb">Gross ROI</div>
+          <div class="vl" id="roi-gross-val"></div>
+          <div class="sb" id="roi-gross-sub"></div>
+        </div>
+        <div class="met met-base">
+          <div class="lb">Payback period</div>
+          <div class="vl" id="payback-val"></div>
+          <div class="sb" id="payback-sub"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Seasonal revenue</div>
+        <div class="g3" id="season-summary" style="margin-bottom:12px"></div>
+        <div class="prow">
+          <span class="rl" style="font-weight:500;color:var(--text)">Gross rental revenue</span>
+          <span class="rv p" id="gross-rev" style="font-size:15px"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Annual P&amp;L</div>
+        <div id="pnl"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Cost breakdown</div>
+        <div id="bars"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Long-term projection</div>
+        <div class="irow">
+          <label>Horizon</label>
+          <input type="range" id="horizon" min="5" max="30" step="1" value="10" oninput="recalc()">
+          <span class="ov" id="horizon-out"></span>
+        </div>
+        <div class="irow">
+          <label>Annual rent growth</label>
+          <input type="range" id="growth" min="0" max="10" step="0.5" value="3" oninput="recalc()">
+          <span class="ov" id="growth-out"></span>
+        </div>
+        <div class="irow">
+          <label>Property appreciation</label>
+          <input type="range" id="appre" min="0" max="15" step="0.5" value="4" oninput="recalc()">
+          <span class="ov" id="appre-out"></span>
+        </div>
+        <div class="g2" id="metrics-proj" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer">Indicative simulation only — consult a qualified tax advisor before any investment · Uluwatu Property</p>
+</div>
+
+<script>
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const pct = n => (Math.round(n * 10) / 10).toFixed(1) + '%';
+const g = id => parseFloat(document.getElementById(id).value) || 0;
+const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+const setH = (id, h) => { const el = document.getElementById(id); if (el) el.innerHTML = h; };
+
+const DAYS = { peak: 14, high: 93, low: 258 };
+const FEES = 0.01;
+
+function recalc() {
+  const price = g('price'), lease = g('lease');
+  const bedrooms = Math.max(1, g('bedrooms'));
+  const taxrate = g('taxrate') / 100;
+  const mgmt = g('mgmt') / 100;
+  const horizon = g('horizon'), growth = g('growth') / 100, appre = g('appre') / 100;
+  const cGarden = g('c_garden');
+
+  set('lease-out', lease + ' yrs');
+  set('taxrate-out', g('taxrate').toFixed(1) + '%');
+  set('mgmt-out', Math.round(g('mgmt')) + '%');
+
+  set('horizon-out', horizon + ' yrs');
+  set('growth-out', g('growth').toFixed(1) + '%');
+  set('appre-out', g('appre').toFixed(1) + '%');
+
+  const totalInvest = price * (1 + FEES);
+  const rLow = g('r_low'), rHigh = Math.round(rLow * 1.2), rPeak = Math.round(rLow * 1.4);
+
+  set('r_peak_disp', '$' + rPeak + '/nt');
+  set('r_high_disp', '$' + rHigh + '/nt');
+
+  const occs = { peak: g('o_peak') / 100, high: g('o_high') / 100, low: g('o_low') / 100 };
+  const rates = { peak: rPeak, high: rHigh, low: rLow };
+  const seasons = ['peak', 'high', 'low'];
+
+  let grossRevenue = 0;
+  const rev = {}, rdays = {};
+  for (const s of seasons) {
+    const rd = Math.round(DAYS[s] * occs[s]);
+    rdays[s] = rd; rev[s] = rd * rates[s]; grossRevenue += rev[s];
+  }
+  const totalNights = Object.values(rdays).reduce((a, b) => a + b, 0);
+  const avgRate = totalNights > 0 ? Math.round((rPeak * rdays.peak + rHigh * rdays.high + rLow * rdays.low) / totalNights) : 0;
+  const avgOcc = Math.round((occs.peak * DAYS.peak + occs.high * DAYS.high + occs.low * DAYS.low) / 365 * 100);
+
+  set('avg-days-out', '365 days');
+  set('avg-rate-out', '$' + avgRate + '/nt');
+  set('avg-occ-out', avgOcc + '%');
+
+  const grossPerMonth = {
+    low: rev.low / (DAYS.low / 30.44),
+    high: rev.high / (DAYS.high / 30.44),
+    peak: rev.peak / (DAYS.peak / 30.44)
+  };
+
+  const cH = 120 * bedrooms, cL = 50 * bedrooms, cE = 60 * bedrooms;
+  const ci = {
+    house:   { low: cH,      high: Math.round(cH * 1.2),      peak: Math.round(cH * 1.4) },
+    garden:  { low: cGarden, high: Math.round(cGarden * 1.2), peak: Math.round(cGarden * 1.4) },
+    laundry: { low: cL,      high: Math.round(cL * 1.2),      peak: Math.round(cL * 1.4) },
+    elec:    { low: cE,      high: Math.round(cE * 1.2),      peak: Math.round(cE * 1.4) },
+  };
+  const mm = { low: grossPerMonth.low * 0.02, high: grossPerMonth.high * 0.02, peak: grossPerMonth.peak * 0.02 };
+
+  set('c_house_low',   '$' + cH + '/mo');
+  set('c_house_high',  '$' + Math.round(cH * 1.2) + '/mo');
+  set('c_house_peak',  '$' + Math.round(cH * 1.4) + '/mo');
+  set('c_garden_high', '$' + Math.round(cGarden * 1.2) + '/mo');
+  set('c_garden_peak', '$' + Math.round(cGarden * 1.4) + '/mo');
+  set('c_laundry_low',  '$' + cL + '/mo');
+  set('c_laundry_high', '$' + Math.round(cL * 1.2) + '/mo');
+  set('c_laundry_peak', '$' + Math.round(cL * 1.4) + '/mo');
+  set('c_elec_low',   '$' + cE + '/mo');
+  set('c_elec_high',  '$' + Math.round(cE * 1.2) + '/mo');
+  set('c_elec_peak',  '$' + Math.round(cE * 1.4) + '/mo');
+  set('c_maint_low',  '$' + Math.round(mm.low) + '/mo');
+  set('c_maint_high', '$' + Math.round(mm.high) + '/mo');
+  set('c_maint_peak', '$' + Math.round(mm.peak) + '/mo');
+
+  const ai = { housekeeper: 0, garden: 0, laundry: 0, electricity: 0, maintenance: 0 };
+  for (const s of seasons) {
+    const mo = DAYS[s] / 30.44;
+    ai.housekeeper += ci.house[s] * mo;
+    ai.garden += ci.garden[s] * mo;
+    ai.laundry += ci.laundry[s] * mo;
+    ai.electricity += ci.elec[s] * mo;
+    ai.maintenance += mm[s] * mo;
+  }
+  const totalOp = Object.values(ai).reduce((a, b) => a + b, 0);
+  set('total-op', fmt(totalOp));
+
+  const mgmtCost = grossRevenue * mgmt;
+  const netBeforeTax = grossRevenue - mgmtCost - totalOp;
+  const taxCost = Math.max(0, netBeforeTax) * taxrate;
+  const netRevenue = netBeforeTax - taxCost;
+  const roiGross = totalInvest > 0 ? grossRevenue / totalInvest * 100 : 0;
+  const roiNet = totalInvest > 0 ? netRevenue / totalInvest * 100 : 0;
+  const payback = netRevenue > 0 ? totalInvest / netRevenue : Infinity;
+
+  const tier = roiNet >= 8 ? 'pos' : roiNet >= 4 ? 'inf' : 'neg';
+  const heroBg = tier === 'pos' ? 'var(--green-bg)' : tier === 'inf' ? 'var(--blue-bg)' : 'var(--red-bg)';
+  const heroColor = tier === 'pos' ? 'var(--green)' : tier === 'inf' ? 'var(--blue)' : 'var(--red)';
+  const heroMsg = roiNet >= 8 ? 'Excellent return' : roiNet >= 5 ? 'Good return' : roiNet >= 3 ? 'Moderate return' : 'Low — review your rates';
+
+  const heroBox = document.getElementById('roi-hero-box');
+  heroBox.style.background = heroBg;
+  ['roi-label-txt', 'roi-hero-val', 'roi-hero-sub'].forEach(id => {
+    document.getElementById(id).style.color = heroColor;
+  });
+  set('roi-label-txt', 'Net ROI (annual)');
+  set('roi-hero-val', pct(roiNet));
+  set('roi-hero-sub', heroMsg + ' · Net income: ' + fmt(netRevenue) + '/yr · Total investment: ' + fmt(totalInvest));
+
+  set('roi-gross-val', pct(roiGross));
+  set('roi-gross-sub', totalNights + ' nights/yr · avg $' + avgRate + '/nt');
+  document.getElementById('payback-val').textContent = payback < 999 ? (Math.round(payback * 10) / 10).toFixed(1) + ' yrs' : '—';
+  set('payback-sub', 'invested: ' + fmt(totalInvest));
+  set('gross-rev', fmt(grossRevenue));
+
+  setH('season-summary', [
+    { s: 'peak', label: 'Peak season', bg: '#fde8e8', tc: '#a32d2d' },
+    { s: 'high', label: 'High season', bg: '#fef3e2', tc: '#854f0b' },
+    { s: 'low',  label: 'Low season',  bg: '#e8f4fd', tc: '#185fa5' },
+  ].map(({ s, label, bg, tc }) => `
+    <div class="met" style="background:${bg}">
+      <div class="lb" style="color:${tc}">${label}</div>
+      <div class="vl" style="color:${tc}">${fmt(rev[s])}</div>
+      <div class="sb" style="color:${tc}">${rdays[s]} nights · $${rates[s]}/nt</div>
+    </div>`).join(''));
+
+  setH('pnl', `
+    <div class="prow"><span class="rl">Peak season</span><span class="rv p">${fmt(rev.peak)}</span></div>
+    <div class="prow"><span class="rl">High season</span><span class="rv p">${fmt(rev.high)}</span></div>
+    <div class="prow"><span class="rl">Low season</span><span class="rv p">${fmt(rev.low)}</span></div>
+    <div class="prow" style="border-top:.5px solid var(--border2);padding-top:7px;margin-top:3px"><span class="rl" style="font-weight:500;color:var(--text)">Gross revenue</span><span class="rv p">${fmt(grossRevenue)}</span></div>
+    <div class="prow" style="margin-top:6px"><span class="rl">— Management (${Math.round(g('mgmt'))}%)</span><span class="rv n">−${fmt(mgmtCost)}</span></div>
+    <div class="prow"><span class="rl">— Operating costs</span><span class="rv n">−${fmt(totalOp)}</span></div>
+    <div class="prow"><span class="rl">— Tax on net income (${g('taxrate').toFixed(1)}%)</span><span class="rv n">−${fmt(taxCost)}</span></div>
+    <div class="prow prow-total"><span class="rl">Net income / year</span><span class="rv ${netRevenue >= 0 ? 'p' : 'n'}">${fmt(netRevenue)}</span></div>
+  `);
+
+  const bi = [['Management', mgmtCost], ['Housekeeper', ai.housekeeper], ['Garden/Pool', ai.garden], ['Laundry', ai.laundry], ['Electricity', ai.electricity], ['Maintenance', ai.maintenance], ['Tax on net income', taxCost]];
+  const maxC = Math.max(...bi.map(c => c[1]), 1);
+  const colors = ['#5a5a45', '#1D9E75', '#378ADD', '#BA7517', '#D85A30', '#7F77DD', '#D4537E', '#888780'];
+  setH('bars', bi.map(([l, v], i) => `
+    <div class="br">
+      <div class="bl">${l}</div>
+      <div class="bb"><div class="bf" style="width:${Math.round(v / maxC * 100)}%;background:${colors[i]}"></div></div>
+      <div class="bv">${fmt(v)}</div>
+    </div>`).join(''));
+
+  let cumNet = 0, rLowY = rLow;
+  for (let y = 1; y <= horizon; y++) {
+    const rH2 = Math.round(rLowY * 1.2), rP2 = Math.round(rLowY * 1.4);
+    let yr = 0;
+    for (const s of seasons) {
+      const rd = Math.round(DAYS[s] * occs[s]);
+      yr += rd * (s === 'peak' ? rP2 : s === 'high' ? rH2 : rLowY);
+    }
+    const yMgmt = yr * mgmt;
+    const yOp = yr * 0.02 + (cH + cGarden + cL + cE) * ((DAYS.low / 30.44) + (DAYS.high / 30.44) * 1.2 + (DAYS.peak / 30.44) * 1.4);
+    const yNetBeforeTax = yr - yMgmt - yOp;
+    const yTax = Math.max(0, yNetBeforeTax) * taxrate;
+    const ch = yMgmt + yOp + yTax;
+    cumNet += yr - ch;
+    rLowY *= (1 + growth);
+  }
+  // Residual lease value — 3 scenarios
+  // Lease depreciation is non-linear: slow early, accelerates as years run out
+  // We model this with a power curve: residual% = (remaining/initial)^exponent
+  // Pessimistic: exponent 2.0 (fast depreciation), Base: 1.3, Optimistic: 0.8
+  const leaseRemaining = Math.max(0, lease - horizon);
+  const leaseRatio = leaseRemaining / lease;
+  const marketValue = price * Math.pow(1 + appre, horizon);
+  const residualPess = marketValue * Math.pow(leaseRatio, 2.0);   // fast depreciation
+  const residualBase = marketValue * Math.pow(leaseRatio, 1.3);   // moderate
+  const residualOpt  = marketValue * Math.pow(leaseRatio, 0.8);   // slow depreciation
+  const roiOnRentals = totalInvest > 0 ? cumNet / totalInvest * 100 : 0;
+  const totalRetPess = cumNet + residualPess;
+  const totalRetBase = cumNet + residualBase;
+  const totalRetOpt  = cumNet + residualOpt;
+  const roiTotalPess = totalInvest > 0 ? totalRetPess / totalInvest * 100 : 0;
+  const roiTotalBase = totalInvest > 0 ? totalRetBase / totalInvest * 100 : 0;
+  const roiTotalOpt  = totalInvest > 0 ? totalRetOpt  / totalInvest * 100 : 0;
+
+  setH('metrics-proj', `
+    <div class="met met-pos" style="grid-column:span 1">
+      <div class="lb">Cumulative net income</div>
+      <div class="vl">${fmt(cumNet)}</div>
+      <div class="sb">rental income over ${horizon} yrs</div>
+    </div>
+    <div class="met met-base" style="grid-column:span 1">
+      <div class="lb">ROI on rentals only</div>
+      <div class="vl">${pct(roiOnRentals)}</div>
+      <div class="sb">excl. residual value</div>
+    </div>
+    <div style="grid-column:span 2; background:var(--bg2); border: 0.5px solid var(--border); border-radius:var(--r); padding: 16px 18px; margin-top:2px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text2)">Indicative residual value — ${leaseRemaining} yrs remaining of ${lease}</div>
+        <div style="font-size:10px;color:var(--text3)">market est. ${fmt(marketValue)} (+${g('appre').toFixed(1)}%/yr)</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--red-bg);border-radius:var(--r);padding:10px 12px">
+          <div style="font-size:10px;font-weight:600;color:var(--red);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">Pessimistic</div>
+          <div style="font-size:16px;font-weight:500;color:var(--red)">${fmt(residualPess)}</div>
+          <div style="font-size:10px;color:var(--red);margin-top:2px;opacity:.8">steep lease depreciation</div>
+        </div>
+        <div style="background:var(--orange-bg);border-radius:var(--r);padding:10px 12px">
+          <div style="font-size:10px;font-weight:600;color:var(--orange);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">Base case</div>
+          <div style="font-size:16px;font-weight:500;color:var(--orange)">${fmt(residualBase)}</div>
+          <div style="font-size:10px;color:var(--orange);margin-top:2px;opacity:.8">moderate depreciation</div>
+        </div>
+        <div style="background:var(--green-bg);border-radius:var(--r);padding:10px 12px">
+          <div style="font-size:10px;font-weight:600;color:var(--green);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">Optimistic</div>
+          <div style="font-size:16px;font-weight:500;color:var(--green)">${fmt(residualOpt)}</div>
+          <div style="font-size:10px;color:var(--green);margin-top:2px;opacity:.8">slow depreciation</div>
+        </div>
+      </div>
+      <div style="border-top:0.5px solid var(--border);padding-top:12px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);margin-bottom:8px">Total return (rentals + residual value)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--red)">${fmt(totalRetPess)}</div>
+            <div style="font-size:10px;color:var(--text3)">ROI ${pct(roiTotalPess)}</div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--orange)">${fmt(totalRetBase)}</div>
+            <div style="font-size:10px;color:var(--text3)">ROI ${pct(roiTotalBase)}</div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--green)">${fmt(totalRetOpt)}</div>
+            <div style="font-size:10px;color:var(--text3)">ROI ${pct(roiTotalOpt)}</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text3);border-top:0.5px solid var(--border);padding-top:8px">
+        Lease depreciation is non-linear — early years lose value slowly, accelerating as the end approaches. Scenarios use a power curve model. Actual resale depends on market conditions and remaining term.
+      </div>
+    </div>
+  `);
+
+  window._simData = { price, lease, bedrooms, mgmt: g('mgmt'), taxrate: g('taxrate'), horizon, growth: g('growth'), appre: g('appre'), rLow, rHigh, rPeak, avgRate, avgOcc, o_peak: g('o_peak'), o_high: g('o_high'), o_low: g('o_low'), cH, cGarden, cL, cE, grossRevenue, netRevenue, roiNet, roiGross, payback, totalOp, mgmtCost, taxCost, totalInvest, rev, rdays, cumNet, totalNights, ai, leaseRemaining, marketValue, residualPess, residualBase, residualOpt, roiOnRentals, totalRetPess, totalRetBase, totalRetOpt, roiTotalPess, roiTotalBase, roiTotalOpt };
+}
+
+// Logo embedded in downloaded simulations: loaded once as a data URL so the exported file works offline
+let LOGO_DATA_URL = '';
+fetch('logo.jpg')
+  .then(r => r.ok ? r.blob() : Promise.reject())
+  .then(b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(b); }))
+  .then(u => { LOGO_DATA_URL = u; })
+  .catch(() => {});
+
+function downloadSim() {
+  const d = window._simData || {};
+  const logoSrc = LOGO_DATA_URL || new URL('logo.jpg', location.href).href;
+  const f = n => '$' + Math.round(n || 0).toLocaleString('en-US');
+  const p = n => ((Math.round((n || 0) * 10) / 10).toFixed(1)) + '%';
+  const rv = d.rev || {}, rd = d.rdays || {}, ai = d.ai || {};
+  const tier = (d.roiNet || 0) >= 8 ? 'pos' : (d.roiNet || 0) >= 4 ? 'inf' : 'neg';
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Uluwatu Property — ROI Simulation</title>
+<style>body{font-family:-apple-system,sans-serif;max-width:820px;margin:40px auto;padding:0 24px;color:#2c2c2a;background:#fff}
+.logo-bg{background:#c8c8b4;padding:14px 22px;border-radius:8px;display:inline-block;margin-bottom:22px}
+.logo-big{font-size:24px;font-weight:700;letter-spacing:2px;font-family:Georgia,serif;color:#2c2c2a;display:block}
+.logo-sub{font-size:11px;letter-spacing:5px;font-family:Georgia,serif;color:#2c2c2a;display:block}
+.hero{border-radius:10px;padding:22px 26px;margin-bottom:24px}
+.hero .lb{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.hero .val{font-size:56px;font-weight:500;line-height:1}
+.hero .sub{font-size:13px;margin-top:8px}
+.pos{background:#eaf3de}.pos .lb,.pos .val,.pos .sub{color:#3b6d11}
+.inf{background:#e6f1fb}.inf .lb,.inf .val,.inf .sub{color:#185fa5}
+.neg{background:#fcebeb}.neg .lb,.neg .val,.neg .sub{color:#a32d2d}
+h2{font-size:14px;font-weight:500;margin:26px 0 10px;border-bottom:1px solid #eee;padding-bottom:5px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
+.met{background:#f5f5f0;border-radius:8px;padding:12px}
+.met .mlb{font-size:10px;color:#888;margin-bottom:3px}
+.met .mvl{font-size:17px;font-weight:500;color:#2c2c2a}
+.met .msb{font-size:10px;color:#aaa;margin-top:2px}
+.mpos{background:#eaf3de}.mpos .mvl{color:#3b6d11}
+.minf{background:#e6f1fb}.minf .mvl{color:#185fa5}
+.mneg{background:#fcebeb}.mneg .mvl{color:#a32d2d}
+.pk{background:#fde8e8}.pk .mlb,.pk .mvl,.pk .msb{color:#a32d2d}
+.hi{background:#fef3e2}.hi .mlb,.hi .mvl,.hi .msb{color:#854f0b}
+.lo{background:#e8f4fd}.lo .mlb,.lo .mvl,.lo .msb{color:#185fa5}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px}
+td{padding:6px 0;border-bottom:1px solid #f0f0ea}td:last-child{text-align:right;font-weight:500}
+.p{color:#3b6d11}.n{color:#a32d2d}
+footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center;padding-bottom:24px}
+</style></head><body>
+<img src="${logoSrc}" alt="Uluwatu Property" style="height:72px;width:72px;border-radius:6px;display:block;margin-bottom:20px;">
+<p style="font-size:12px;color:#888;margin-bottom:4px">Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+<p style="font-size:11px;color:#aaa;margin-bottom:20px">${d.bedrooms} bedroom(s) · Purchase ${f(d.price)} · Lease ${d.lease} yrs · Notary 1% · Total investment ${f(d.totalInvest)}</p>
+<div class="hero ${tier}">
+  <div class="lb">Net ROI (annual)</div>
+  <div class="val">${p(d.roiNet)}</div>
+  <div class="sub">${(d.roiNet || 0) >= 8 ? 'Excellent' : (d.roiNet || 0) >= 5 ? 'Good' : (d.roiNet || 0) >= 3 ? 'Moderate' : 'Low — review rates'} · Net income: ${f(d.netRevenue)}/yr · Payback: ${(d.payback || 0) < 999 ? (Math.round((d.payback || 0) * 10) / 10).toFixed(1) + ' yrs' : '—'}</div>
+</div>
+<h2>Seasonal revenue</h2>
+<div class="g3">
+<div class="met pk"><div class="mlb">Peak (14 days)</div><div class="mvl">${f(rv.peak || 0)}</div><div class="msb">${rd.peak || 0} nights · $${d.rPeak}/nt · ${d.o_peak}% occ.</div></div>
+<div class="met hi"><div class="mlb">High (93 days)</div><div class="mvl">${f(rv.high || 0)}</div><div class="msb">${rd.high || 0} nights · $${d.rHigh}/nt · ${d.o_high}% occ.</div></div>
+<div class="met lo"><div class="mlb">Low (258 days)</div><div class="mvl">${f(rv.low || 0)}</div><div class="msb">${rd.low || 0} nights · $${d.rLow}/nt · ${d.o_low}% occ.</div></div>
+</div>
+<p style="font-size:12px;color:#888;margin-bottom:20px">Weighted avg. rate: <strong>$${d.avgRate}/night</strong> · Avg. occupancy: <strong>${d.avgOcc}%</strong> · Total nights: <strong>${d.totalNights}/yr</strong></p>
+<h2>Annual P&L</h2>
+<table>
+<tr><td>Gross rental revenue</td><td class="p">${f(d.grossRevenue)}</td></tr>
+<tr><td>— Management (${d.mgmt}%)</td><td class="n">−${f(d.mgmtCost)}</td></tr>
+<tr><td>— Housekeeper ($120 × ${d.bedrooms} BR)</td><td class="n">−${f(ai.housekeeper)}</td></tr>
+<tr><td>— Garden &amp; pool</td><td class="n">−${f(ai.garden)}</td></tr>
+<tr><td>— Laundry ($50 × ${d.bedrooms} BR)</td><td class="n">−${f(ai.laundry)}</td></tr>
+<tr><td>— Electricity ($60 × ${d.bedrooms} BR)</td><td class="n">−${f(ai.electricity)}</td></tr>
+<tr><td>— Maintenance (2% gross rent)</td><td class="n">−${f(ai.maintenance)}</td></tr>
+<tr><td>— Tax on net income (${d.taxrate}%)</td><td class="n">−${f(d.taxCost)}</td></tr>
+<tr style="font-size:15px"><td><strong>Net income / year</strong></td><td class="${(d.netRevenue || 0) >= 0 ? 'p' : 'n'}"><strong>${f(d.netRevenue)}</strong></td></tr>
+</table>
+<h2>${d.horizon}-year projection</h2>
+<div class="g2" style="margin-bottom:14px">
+<div class="met mpos"><div class="mlb">Cumulative net income</div><div class="mvl">${f(d.cumNet)}</div><div class="msb">rental income over ${d.horizon} yrs</div></div>
+<div class="met"><div class="mlb">ROI on rentals only</div><div class="mvl">${p(d.roiOnRentals)}</div><div class="msb">excl. residual value</div></div>
+</div>
+<div style="background:#f5f5f0;border-radius:8px;padding:16px;margin-bottom:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+  <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#888">Indicative residual value — ${d.leaseRemaining} yrs remaining of ${d.lease}</div>
+  <div style="font-size:10px;color:#aaa">market est. ${f(d.marketValue)} (+${d.appre}%/yr)</div>
+</div>
+<table style="margin-bottom:12px"><tr>
+<td style="border:none;padding:4px 20px 4px 0"><div style="font-size:10px;color:#a32d2d;font-weight:600;text-transform:uppercase;margin-bottom:3px">Pessimistic</div><div style="font-size:16px;font-weight:500;color:#a32d2d">${f(d.residualPess)}</div><div style="font-size:10px;color:#aaa">steep depreciation</div></td>
+<td style="border:none;padding:4px 20px"><div style="font-size:10px;color:#854f0b;font-weight:600;text-transform:uppercase;margin-bottom:3px">Base case</div><div style="font-size:16px;font-weight:500;color:#854f0b">${f(d.residualBase)}</div><div style="font-size:10px;color:#aaa">moderate depreciation</div></td>
+<td style="border:none;padding:4px 0"><div style="font-size:10px;color:#3b6d11;font-weight:600;text-transform:uppercase;margin-bottom:3px">Optimistic</div><div style="font-size:16px;font-weight:500;color:#3b6d11">${f(d.residualOpt)}</div><div style="font-size:10px;color:#aaa">slow depreciation</div></td>
+</tr></table>
+<div style="border-top:1px solid #e0e0d8;padding-top:12px">
+  <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:8px">Total return (rentals + residual value)</div>
+  <table><tr>
+  <td style="border:none;padding:4px 20px 4px 0"><div style="font-size:14px;font-weight:500;color:#a32d2d">${f(d.totalRetPess)}</div><div style="font-size:10px;color:#aaa">ROI ${p(d.roiTotalPess)}</div></td>
+  <td style="border:none;padding:4px 20px"><div style="font-size:14px;font-weight:500;color:#854f0b">${f(d.totalRetBase)}</div><div style="font-size:10px;color:#aaa">ROI ${p(d.roiTotalBase)}</div></td>
+  <td style="border:none;padding:4px 0"><div style="font-size:14px;font-weight:500;color:#3b6d11">${f(d.totalRetOpt)}</div><div style="font-size:10px;color:#aaa">ROI ${p(d.roiTotalOpt)}</div></td>
+  </tr></table>
+</div>
+<p style="font-size:10px;color:#aaa;margin-top:10px;border-top:1px solid #eee;padding-top:8px">Lease depreciation is non-linear — early years lose value slowly, accelerating as the end approaches. Scenarios use a power curve model. Actual resale depends on market conditions.</p>
+</div>
+<footer>Indicative simulation only — consult a qualified tax advisor before any investment · Uluwatu Property</footer>
+</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'uluwatu-roi-simulation.html';
+  a.click();
+}
+
+recalc();
+</script>
+</body>
+</html>
