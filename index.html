@@ -219,6 +219,9 @@
     <button type="button" class="tab" role="tab" id="tab-full" data-tab="full" aria-controls="main" aria-selected="false">Full simulation<span>OTA fees, maintenance plan, management services</span></button>
   </div>
 
+  <!-- Named only when the link carries a property; hidden on a bare link. -->
+  <p id="prefill-note" hidden style="margin:0 0 14px;padding:9px 13px;border-radius:var(--r);background:var(--bg2,rgba(0,0,0,.04));border:0.5px solid var(--border2);font-size:13px;color:var(--text2)"></p>
+
   <div class="main-layout" id="main">
 
     <!-- LEFT COL: Inputs -->
@@ -886,6 +889,62 @@ function setTab(t, updateUrl) {
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab, true)));
 window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
+
+/*
+ * Prefill from the link, e.g. ?ref=UP0423&name=Villa%20Sunset%20Ridge&price=7850000000&currency=IDR&bedrooms=3&lease=27
+ *
+ * Sent by the CRM when the simulator is opened from a listing. A link
+ * without parameters is untouched: the defaults below stand exactly as they
+ * always have, so every link already in circulation behaves the same.
+ */
+function prefillFromLink() {
+  var q;
+  try { q = new URLSearchParams(location.search); } catch (e) { return; }
+  if (!location.search || location.search === '?') return;
+
+  var num = function (key) {
+    var v = parseFloat(q.get(key));
+    return isFinite(v) && v > 0 ? v : null;
+  };
+  var put = function (id, value, min, max) {
+    if (value === null) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.value = Math.round(Math.min(Math.max(value, min), max));
+  };
+
+  var price = num('price');
+  if (price !== null) {
+    // This field is USD; the CRM holds Bali prices in rupiah. Convert with
+    // the rate shown further down the page, so the two never disagree.
+    // Changing that rate afterwards does not re-convert: the price is a
+    // figure the agent can then edit by hand.
+    var currency = (q.get('currency') || '').toUpperCase();
+    if (currency === 'IDR') {
+      var fxEl = document.getElementById('fx');
+      var fx = Math.max(1, (fxEl && parseFloat(fxEl.value)) || 17900);
+      price = price / fx;
+    }
+    put('price', price, 0, 1e9);
+  }
+
+  put('bedrooms', num('bedrooms'), 1, 10);
+  put('lease', num('lease'), 10, 80);
+
+  // Say which property these figures came from. textContent, never innerHTML:
+  // the name arrives from the query string and is not ours to trust.
+  var name = (q.get('name') || '').trim().slice(0, 80);
+  var ref = (q.get('ref') || '').trim().slice(0, 20);
+  if (name || ref) {
+    var banner = document.getElementById('prefill-note');
+    if (banner) {
+      banner.textContent = name && ref ? name + ' \u00b7 ' + ref : name || ref;
+      banner.hidden = false;
+    }
+  }
+}
+
+prefillFromLink();
 setTab(location.hash.slice(1));
 </script>
 </body>
