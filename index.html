@@ -214,9 +214,9 @@
     </button>
   </div>
 
-  <div class="tabs" role="tablist" aria-label="Simulation type">
-    <button type="button" class="tab" role="tab" id="tab-full" data-tab="full" aria-controls="main" aria-selected="true">Full simulation<span>OTA fees, maintenance plan, management services</span></button>
-    <button type="button" class="tab" role="tab" id="tab-classic" data-tab="classic" aria-controls="main" aria-selected="false">Classic simulation<span>Rental income and running costs</span></button>
+  <div class="tabs" id="tabs" role="tablist" aria-label="Simulation type" hidden>
+    <button type="button" class="tab" role="tab" id="tab-classic" data-tab="classic" aria-controls="main" aria-selected="true">Classic simulation<span>Rental income and running costs</span></button>
+    <button type="button" class="tab" role="tab" id="tab-full" data-tab="full" aria-controls="main" aria-selected="false">Full simulation<span>OTA fees, maintenance plan, management services</span></button>
   </div>
 
   <div class="main-layout" id="main">
@@ -465,7 +465,7 @@ const setH = (id, h) => { const el = document.getElementById(id); if (el) el.inn
 
 const DAYS = { peak: 14, high: 93, low: 258 };
 const FEES = 0.01;
-let TAB = 'full';  // 'full' or 'classic'
+let TAB = 'classic';  // 'classic' (home page) or 'full' (hidden, opened with #full)
 
 // Maintenance plans: monthly price in IDR for a villa up to 3 bedrooms, plus each extra bedroom
 const PLAN_BASE_BR = 3;
@@ -870,13 +870,17 @@ ${d.planAnnual > 0 ? `<p style="font-size:12px;color:#888;margin-bottom:20px"><s
   a.click();
 }
 
-// Tabs: Full (default) and Classic; #classic in the URL opens the Classic tab
+// Tabs: the home page shows the Classic simulation with no tabs.
+// The Full simulation is hidden for now: open it with #full in the URL, which also reveals the tabs.
+let SHOW_TABS = false;
 function setTab(t, updateUrl) {
-  TAB = t === 'classic' ? 'classic' : 'full';
+  TAB = t === 'full' ? 'full' : 'classic';
+  if (TAB === 'full') SHOW_TABS = true;
+  document.getElementById('tabs').hidden = !SHOW_TABS;
   document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === TAB)));
   document.querySelectorAll('.full-only').forEach(el => { el.hidden = TAB !== 'full'; });
   if (updateUrl) {
-    try { history.replaceState(null, '', TAB === 'classic' ? '#classic' : location.pathname + location.search); } catch (e) {}
+    try { history.replaceState(null, '', '#' + TAB); } catch (e) {}
   }
   recalc();
 }

@@ -9,8 +9,8 @@ It is a single static page: all calculations run in the visitor's browser. There
 
 | Tab | Link | What it includes |
 | --- | --- | --- |
-| Full simulation (default) | `/` | OTA commission, direct bookings, maintenance plan, management services (website + Instagram) |
-| Classic simulation | `/#classic` | The original simulator: rental income and running costs only |
+| Classic simulation (home page) | `/` | The original simulator: rental income and running costs only. No tabs are shown. |
+| Full simulation (hidden for now) | `/#full` | OTA commission, direct bookings, maintenance plan, management services (website + Instagram). Opening this link also shows the tabs. |
 
 Both tabs share the same code. Elements marked `class="full-only"` only show in the Full tab; in the Classic tab the OTA commission is 0, there is no maintenance plan and no management services.
 
@@ -46,7 +46,7 @@ To undo a change, open the commit history and revert the commit, or redeploy a p
 | USD / IDR exchange rate (17,900) | `id="fx"` |
 | OTA commission (15%) | `id="ota"` |
 | Management fee base (after OTA or gross) | `id="mgmt_base"` |
-| Default tab | `let TAB` and the `setTab()` function at the end of the script |
+| Default tab, hidden Full tab | `let TAB` and the `setTab()` function at the end of the script |
 | Downloaded simulation layout | `downloadSim()` |
 | Disclaimer text | `class="footer"` (page) and `<footer>` inside `downloadSim()` |
 
