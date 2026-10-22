@@ -5,6 +5,15 @@ Live site: https://uluwatupropertyroicalculator.netlify.app/
 
 It is a single static page: all calculations run in the visitor's browser. There is no server, database or build step.
 
+## Two tabs
+
+| Tab | Link | What it includes |
+| --- | --- | --- |
+| Full simulation (default) | `/` | OTA commission, direct bookings, maintenance plan, management services (website + Instagram) |
+| Classic simulation | `/#classic` | The original simulator: rental income and running costs only |
+
+Both tabs share the same code. Elements marked `class="full-only"` only show in the Full tab; in the Classic tab the OTA commission is 0, there is no maintenance plan and no management services.
+
 ## Files
 
 | File | What it is |
@@ -32,6 +41,12 @@ To undo a change, open the commit history and revert the commit, or redeploy a p
 | Per-bedroom costs ($120 housekeeper, $50 laundry, $60 electricity) | `const cH`, `cL`, `cE` in `recalc()` |
 | ROI rating thresholds ("Excellent return"…) | `heroMsg` in `recalc()` |
 | Residual lease value scenarios | the "Residual lease value — 3 scenarios" block in `recalc()` |
+| Maintenance plan prices (IDR / month, extra bedroom) and perks | `const PLANS` in the script |
+| Default maintenance plan | `checked` on the plan radio buttons (`id="plan_standard"`) |
+| USD / IDR exchange rate (17,900) | `id="fx"` |
+| OTA commission (15%) | `id="ota"` |
+| Management fee base (after OTA or gross) | `id="mgmt_base"` |
+| Default tab | `let TAB` and the `setTab()` function at the end of the script |
 | Downloaded simulation layout | `downloadSim()` |
 | Disclaimer text | `class="footer"` (page) and `<footer>` inside `downloadSim()` |
 

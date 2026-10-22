@@ -63,6 +63,14 @@
   .dl-btn:hover { background: var(--bg3); }
   .dl-btn svg { flex-shrink: 0; }
 
+  /* Tabs */
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px 28px; margin-bottom: 20px; border-bottom: 0.5px solid var(--border2); }
+  .tab { appearance: none; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -0.5px; padding: 6px 0 10px; font: inherit; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+  .tab span { font-size: 11px; font-weight: 400; color: var(--text3); }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
   /* Main 2-col layout */
   .main-layout { display: grid; grid-template-columns: 420px 1fr; gap: 20px; align-items: start; }
   @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
@@ -75,6 +83,8 @@
     .roi-hero .roi-val { font-size: 52px; }
     .bl { min-width: 96px; }
     #price { width: 110px !important; }
+    .tabs { flex-wrap: nowrap; gap: 20px; }
+    .tab span { display: none; }
   }
 
   /* Cards */
@@ -204,7 +214,12 @@
     </button>
   </div>
 
-  <div class="main-layout">
+  <div class="tabs" role="tablist" aria-label="Simulation type">
+    <button type="button" class="tab" role="tab" id="tab-full" data-tab="full" aria-controls="main" aria-selected="true">Full simulation<span>OTA fees, maintenance plan, management services</span></button>
+    <button type="button" class="tab" role="tab" id="tab-classic" data-tab="classic" aria-controls="main" aria-selected="false">Classic simulation<span>Rental income and running costs</span></button>
+  </div>
+
+  <div class="main-layout" id="main">
 
     <!-- LEFT COL: Inputs -->
     <div>
@@ -262,7 +277,7 @@
             <div class="ac"><span id="avg-occ-out"></span></div>
           </div>
         </div>
-        <div class="irow">
+        <div class="irow full-only">
           <label for="ota">OTA commission</label>
           <input type="range" id="ota" min="0" max="25" step="0.5" value="15" oninput="recalc()">
           <span class="ov" id="ota-out"></span>
@@ -272,14 +287,14 @@
           <input type="range" id="mgmt" min="10" max="25" step="1" value="15" oninput="recalc()">
           <span class="ov" id="mgmt-out"></span>
         </div>
-        <div class="irow">
+        <div class="irow full-only">
           <label for="mgmt_base">Management fee on</label>
           <select id="mgmt_base" onchange="recalc()">
             <option value="net" selected>Revenue after OTA</option>
             <option value="gross">Gross revenue</option>
           </select>
         </div>
-        <p class="hint">Nightly rates are the prices guests see on Airbnb and Booking.com. Airbnb takes about 15.5% from the host, Booking.com about 15%.</p>
+        <p class="hint full-only">Nightly rates are the prices guests see on Airbnb and Booking.com. Airbnb takes about 15.5% from the host, Booking.com about 15%.</p>
       </div>
 
       <div class="card">
@@ -321,7 +336,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card full-only">
         <div class="sec">Maintenance plan</div>
         <p class="card-note">Monthly subscription for a villa up to 3 bedrooms. Each extra bedroom is billed on top.</p>
         <div class="plans" role="radiogroup" aria-label="Maintenance plan">
@@ -341,7 +356,7 @@
         <div class="card-total">Plan cost per year: <strong id="plan-annual-out"></strong></div>
       </div>
 
-      <div class="card">
+      <div class="card full-only">
         <div class="sec">Management by Uluwatu Property</div>
         <label class="switch-row"><input type="checkbox" id="managed" checked onchange="recalc()">Rental managed by Uluwatu Property</label>
         <div class="managed-fields" id="managed-fields">
@@ -450,6 +465,7 @@ const setH = (id, h) => { const el = document.getElementById(id); if (el) el.inn
 
 const DAYS = { peak: 14, high: 93, low: 258 };
 const FEES = 0.01;
+let TAB = 'full';  // 'full' or 'classic'
 
 // Maintenance plans: monthly price in IDR for a villa up to 3 bedrooms, plus each extra bedroom
 const PLAN_BASE_BR = 3;
@@ -473,7 +489,7 @@ function recalc() {
 
   // Maintenance plan
   const fx = Math.max(1, g('fx'));
-  const planKey = (document.querySelector('input[name="plan"]:checked') || {}).value || 'none';
+  const planKey = TAB === 'full' ? ((document.querySelector('input[name="plan"]:checked') || {}).value || 'none') : 'none';
   const plan = PLANS[planKey];
   const planIdrMo = planMonthlyIDR(planKey, bedrooms);
   const planAnnual = planIdrMo * 12 / fx;
@@ -488,14 +504,14 @@ function recalc() {
   set('plan-annual-out', planAnnual > 0 ? fmt(planAnnual) + ' (' + fmtIDR(planIdrMo) + ' / month)' : '$0');
 
   // Management by Uluwatu Property: costs entered manually
-  const managed = document.getElementById('managed').checked;
-  document.getElementById('managed-fields').hidden = !managed;
+  const managed = TAB === 'full' && document.getElementById('managed').checked;
+  document.getElementById('managed-fields').hidden = !document.getElementById('managed').checked;
   const setupCost = managed ? g('setup_cost') : 0;
   const igMonthly = managed ? g('ig_monthly') : 0;
   const igAnnual = igMonthly * 12;
 
   // Booking channels: OTA commission on platform bookings; direct bookings (website + Instagram) pay none
-  const ota = g('ota') / 100;
+  const ota = TAB === 'full' ? g('ota') / 100 : 0;
   const direct = managed ? g('direct') / 100 : 0;
   const mgmtOnNet = document.getElementById('mgmt_base').value === 'net';
   set('ota-out', g('ota').toFixed(1) + '%');
@@ -854,7 +870,19 @@ ${d.planAnnual > 0 ? `<p style="font-size:12px;color:#888;margin-bottom:20px"><s
   a.click();
 }
 
-recalc();
+// Tabs: Full (default) and Classic; #classic in the URL opens the Classic tab
+function setTab(t, updateUrl) {
+  TAB = t === 'classic' ? 'classic' : 'full';
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === TAB)));
+  document.querySelectorAll('.full-only').forEach(el => { el.hidden = TAB !== 'full'; });
+  if (updateUrl) {
+    try { history.replaceState(null, '', TAB === 'classic' ? '#classic' : location.pathname + location.search); } catch (e) {}
+  }
+  recalc();
+}
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab, true)));
+window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
+setTab(location.hash.slice(1));
 </script>
 </body>
 </html>
